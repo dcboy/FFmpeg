@@ -396,7 +396,7 @@ static const AVOption ff_hlmediacodec_enc_options[] = {
 
 #define DECLARE_HLMEDIACODEC_ENC(short_name, full_name, codec_id, codec_type)                         \
   DECLARE_HLMEDIACODEC_VCLASS(short_name)                                                             \
-  AVCodec ff_##short_name##_hlmediacodec_encoder = {                                                  \
+  const AVCodec ff_##short_name##_hlmediacodec_encoder = {                                            \
       .name = #short_name "_hlmediacodec",                                                            \
       .long_name = full_name " (Ffmpeg MediaCodec NDK)",                                              \
       .type = codec_type,                                                                             \
