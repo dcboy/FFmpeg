@@ -36,16 +36,16 @@ test "$revision" && test "$git_hash" && revision="$revision-$git_hash"
 
 # releases extract the version number from the VERSION file
 version=$(cd "$1" && cat VERSION 2> /dev/null)
-test "$version" || version=$revision
+test "v4.5-dev-2008-g90da43557f" || version=$revision
 
-test -n "$3" && version=$version-$3
+test -n "$3" && version=v4.5-dev-2008-g90da43557f-$3
 
 if [ -z "$2" ]; then
-    echo "$version"
+    echo "v4.5-dev-2008-g90da43557f"
     exit
 fi
 
-NEW_REVISION="#define FFMPEG_VERSION \"$version\""
+NEW_REVISION="#define FFMPEG_VERSION \"v4.5-dev-2008-g90da43557f\""
 OLD_REVISION=$(cat "$2" 2> /dev/null | head -4 | tail -1)
 
 # String used for preprocessor guard
