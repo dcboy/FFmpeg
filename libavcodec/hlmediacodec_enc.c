@@ -10,7 +10,7 @@
 
 static av_cold int hlmediacodec_encode_init(AVCodecContext *avctx)
 {
-  AMediaFormat *format = NULL;
+  // AMediaFormat *format = NULL;
   HLMediaCodecEncContext *ctx = avctx->priv_data;
   int ret = 0;
 
@@ -87,13 +87,15 @@ static av_cold int hlmediacodec_encode_init(AVCodecContext *avctx)
 
 static int hlmediacodec_enc_send(AVCodecContext *avctx)
 {
+
+  hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
+
   HLMediaCodecEncContext *ctx = avctx->priv_data;
-
   int ret = 0;
-
   do
   {
     int get_ret = ff_encode_get_frame(avctx, ctx->frame);
+    hi_logi(avctx, "%s %d ff_encode_get_frame ret: %d", __FUNCTION__, __LINE__, get_ret);
     if (get_ret != 0)
     {
       ctx->stats.get_fail_cnt++;
@@ -119,10 +121,14 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
     while (true)
     {
       ssize_t in_bufidx = AMediaCodec_dequeueInputBuffer(ctx->mediacodec, ctx->in_timeout);
+
+      hi_logi(avctx, "%s %d AMediaCodec_dequeueInputBuffer in_bufidx: %d", __FUNCTION__, __LINE__, in_bufidx);
+
       if (in_bufidx < 0)
       {
         hi_logd(avctx, "%s %d AMediaCodec_dequeueInputBuffer codec: %p fail (%d) getret: %d times: %d",
                 __FUNCTION__, __LINE__, ctx->mediacodec, in_bufidx, get_ret, in_times);
+
         ctx->stats.in_fail_cnt++;
 
         if (in_times-- <= 0)
@@ -137,6 +143,7 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
 
       size_t in_buffersize = 0;
       uint8_t *in_buffer = AMediaCodec_getInputBuffer(ctx->mediacodec, in_bufidx, &in_buffersize);
+
       if (!in_buffer)
       {
         hi_loge(avctx, "%s %d AMediaCodec_getInputBuffer codec: %p fail", __FUNCTION__, __LINE__, ctx->mediacodec);
@@ -180,17 +187,19 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
       {
         ctx->stats.in_succ_cnt++;
       }
-
       break;
     }
   } while (false);
 
   av_frame_unref(ctx->frame);
+
   return ret;
 }
 
 static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
 {
+  hi_logi(avctx, "%s %d start hlmediacodec_enc_recv", __FUNCTION__, __LINE__);
+
   HLMediaCodecEncContext *ctx = avctx->priv_data;
 
   int ret = 0;
@@ -267,31 +276,25 @@ static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
     if (ou_bufidx == AMEDIACODEC_INFO_TRY_AGAIN_LATER)
     {
       hi_logd(avctx, "%s %d AMediaCodec_dequeueOutputBuffer AMEDIACODEC_INFO_TRY_AGAIN_LATER ", __FUNCTION__, __LINE__);
-
       ctx->stats.ou_fail_again_cnt++;
-
       if (ou_times <= 0)
       {
         ret = AVERROR(EAGAIN);
         hi_loge(avctx, "%s %d AMediaCodec_dequeueOutputBuffer timeout ", __FUNCTION__, __LINE__);
         break;
       }
-
       continue;
     }
     else if (ou_bufidx == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED)
     {
       ctx->stats.ou_fail_format_cnt++;
-
       AMediaFormat *format = AMediaCodec_getOutputFormat(ctx->mediacodec);
       if (format)
       {
         hi_logi(avctx, "%s %d AMediaCodec_dequeueOutputBuffer AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED %s",
                 __FUNCTION__, __LINE__, AMediaFormat_toString(format));
-
         AMediaFormat_delete(format);
       }
-
       continue;
     }
     else if (ou_bufidx == AMEDIACODEC_INFO_OUTPUT_BUFFERS_CHANGED)
@@ -310,14 +313,19 @@ static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
     }
   }
 
+  hi_logi(avctx, "%s %d ret (%d)", __FUNCTION__, __LINE__, ret);
+
   return ret;
 }
 
 static int hlmediacodec_encode_receive_packet(AVCodecContext *avctx, AVPacket *pkt)
 {
+  hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
+
   HLMediaCodecEncContext *ctx = avctx->priv_data;
   if (!ctx->inited)
   {
+    hi_logi(avctx, "%s %d not inited", __FUNCTION__, __LINE__);
     return AVERROR_EXTERNAL;
   }
 
