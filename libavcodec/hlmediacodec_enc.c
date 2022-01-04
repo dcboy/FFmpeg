@@ -85,7 +85,7 @@ static av_cold int hlmediacodec_encode_init(AVCodecContext *avctx)
   return ret;
 }
 
-static int hlmediacodec_enc_send(AVCodecContext *avctx)
+static int hlmediacodec_enc_send(AVCodecContext *avctx, AVFrame *frame)
 {
 
   hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
@@ -94,28 +94,13 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
   int ret = 0;
   do
   {
-    int get_ret = ff_encode_get_frame(avctx, ctx->frame);
-    hi_logi(avctx, "%s %d ff_encode_get_frame ret: %d", __FUNCTION__, __LINE__, get_ret);
-    if (get_ret != 0)
+    if (frame == NULL)
     {
-      ctx->stats.get_fail_cnt++;
+      ctx->in_eof = true; // flush
+      hi_logd(avctx, "%s %d ff_encode_get_frame eof", __FUNCTION__, __LINE__);
+    }
 
-      if (get_ret == AVERROR_EOF)
-      {
-        ctx->in_eof = true; //flush
-        hi_logd(avctx, "%s %d ff_encode_get_frame eof", __FUNCTION__, __LINE__);
-      }
-      else
-      {
-        ret = AVERROR(EAGAIN);
-        hi_logd(avctx, "%s %d ff_encode_get_frame fail (%d)", __FUNCTION__, __LINE__, get_ret);
-        break;
-      }
-    }
-    else
-    {
-      ctx->stats.get_succ_cnt++;
-    }
+    ctx->stats.get_succ_cnt++;
 
     int in_times = ctx->in_timeout_times;
     while (true)
@@ -126,8 +111,8 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
 
       if (in_bufidx < 0)
       {
-        hi_logd(avctx, "%s %d AMediaCodec_dequeueInputBuffer codec: %p fail (%d) getret: %d times: %d",
-                __FUNCTION__, __LINE__, ctx->mediacodec, in_bufidx, get_ret, in_times);
+        hi_logd(avctx, "%s %d AMediaCodec_dequeueInputBuffer codec: %p fail (%d) times: %d",
+                __FUNCTION__, __LINE__, ctx->mediacodec, in_bufidx, in_times);
 
         ctx->stats.in_fail_cnt++;
 
@@ -155,17 +140,17 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
       if (!ctx->in_eof)
       {
         size_t copy_size = in_buffersize;
-        int copy_ret = av_image_copy_to_buffer(in_buffer, in_buffersize, (const uint8_t **)ctx->frame->data,
-                                               ctx->frame->linesize, ctx->frame->format,
-                                               ctx->frame->width, ctx->frame->height, 1);
+        int copy_ret = av_image_copy_to_buffer(in_buffer, in_buffersize, (const uint8_t **)frame->data,
+                                               frame->linesize, frame->format,
+                                               frame->width, frame->height, 1);
 
         if (copy_ret > 0)
         {
           copy_size = copy_ret;
         }
 
-        int64_t pts = av_rescale_q(ctx->frame->pts, avctx->time_base, AV_TIME_BASE_Q);
-        int64_t duration = av_rescale_q(ctx->frame->pkt_duration, avctx->time_base, AV_TIME_BASE_Q);
+        int64_t pts = av_rescale_q(frame->pts, avctx->time_base, AV_TIME_BASE_Q);
+        int64_t duration = av_rescale_q(frame->pkt_duration, avctx->time_base, AV_TIME_BASE_Q);
         in_bufidx = AMediaCodec_queueInputBuffer(ctx->mediacodec, in_bufidx, 0, copy_size, pts, 0);
         ctx->in_pts = pts;
         ctx->in_duration = duration;
@@ -190,8 +175,6 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
       break;
     }
   } while (false);
-
-  av_frame_unref(ctx->frame);
 
   return ret;
 }
@@ -318,35 +301,6 @@ static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
   return ret;
 }
 
-static int hlmediacodec_encode_receive_packet(AVCodecContext *avctx, AVPacket *pkt)
-{
-  hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
-
-  HLMediaCodecEncContext *ctx = avctx->priv_data;
-  if (!ctx->inited)
-  {
-    hi_logi(avctx, "%s %d not inited", __FUNCTION__, __LINE__);
-    return AVERROR_EXTERNAL;
-  }
-
-  if (ctx->in_eof && ctx->ou_eof)
-  {
-    hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
-    return AVERROR_EOF;
-  }
-
-  int ret = 0;
-  if (!ctx->in_eof)
-  {
-    if ((ret = hlmediacodec_enc_send(avctx)) != 0)
-    {
-      return ret;
-    }
-  }
-
-  return hlmediacodec_enc_recv(avctx, pkt);
-}
-
 static av_cold int hlmediacodec_encode_close(AVCodecContext *avctx)
 {
   hi_logi(avctx, "%s %d", __FUNCTION__, __LINE__);
@@ -369,13 +323,45 @@ static av_cold int hlmediacodec_encode_close(AVCodecContext *avctx)
     ctx->mediaformat = NULL;
   }
 
-  if (ctx->frame)
+  return 0;
+}
+
+static int hlmediacodec_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
+                                     const AVFrame *frame, int *got_packet)
+{
+  hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
+
+  HLMediaCodecEncContext *ctx = avctx->priv_data;
+  if (!ctx->inited)
   {
-    av_frame_free(&ctx->frame);
-    ctx->frame = NULL;
+    hi_logi(avctx, "%s %d not inited", __FUNCTION__, __LINE__);
+    return AVERROR_EXTERNAL;
   }
 
-  return 0;
+  if (ctx->in_eof && ctx->ou_eof)
+  {
+    hi_logi(avctx, "%s %d eof", __FUNCTION__, __LINE__);
+    return 0;
+    // return AVERROR_EOF;
+  }
+
+  int ret = 0;
+  if (!ctx->in_eof)
+  {
+    if ((ret = hlmediacodec_enc_send(avctx, frame)) != 0)
+    {
+      return ret;
+    }
+  }
+
+  ret = hlmediacodec_enc_recv(avctx, pkt);
+  if (ret == 0)
+  {
+    *got_packet = 1;
+  }
+
+  hi_logi(avctx, "%s %d ret: %d", __FUNCTION__, __LINE__, ret);
+  return ret;
 }
 
 #define OFFSET(x) offsetof(HLMediaCodecEncContext, x)
@@ -412,7 +398,7 @@ static const AVOption ff_hlmediacodec_enc_options[] = {
       .priv_class = &ff_##short_name##_hlmediacodec_enc_class,                                        \
       .priv_data_size = sizeof(HLMediaCodecEncContext),                                               \
       .init = hlmediacodec_encode_init,                                                               \
-      .receive_packet = hlmediacodec_encode_receive_packet,                                           \
+      .encode2 = hlmediacodec_encode_frame,                                                           \
       .close = hlmediacodec_encode_close,                                                             \
       .capabilities = AV_CODEC_CAP_DELAY,                                                             \
       .caps_internal = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,                      \
