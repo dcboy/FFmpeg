@@ -3,15 +3,15 @@
 
 #include "hlmediacodec.h"
 
-#define HLMEDIACODEC_BITRATE_MODE_CQ 0  //MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CQ
-#define HLMEDIACODEC_BITRATE_MODE_VBR 1 //MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR
-#define HLMEDIACODEC_BITRATE_MODE_CBR 2 //MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+#define HLMEDIACODEC_BITRATE_MODE_CQ 0  // MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CQ
+#define HLMEDIACODEC_BITRATE_MODE_VBR 1 // MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR
+#define HLMEDIACODEC_BITRATE_MODE_CBR 2 // MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
 
-#define HLMEDIACODEC_MIN_TIMEOUT_USEC 1000      //us
-#define HLMEDIACODEC_MAX_TIMEOUT_USEC 10000000  //us
-#define HLMEDIACODEC_IN_SET_TIMEOUT_USEC 100000 //us
-#define HLMEDIACODEC_OU_SET_TIMEOUT_USEC 8000   //us
-#define HLMEDIACODEC_EOF_SET_TIMEOUT_USEC 30000 //us
+#define HLMEDIACODEC_MIN_TIMEOUT_USEC 1000      // us
+#define HLMEDIACODEC_MAX_TIMEOUT_USEC 10000000  // us
+#define HLMEDIACODEC_IN_SET_TIMEOUT_USEC 100000 // us
+#define HLMEDIACODEC_OU_SET_TIMEOUT_USEC 8000   // us
+#define HLMEDIACODEC_EOF_SET_TIMEOUT_USEC 30000 // us
 
 #define HLMEDIACODEC_MIN_TIMEOUT_TIMES 1
 #define HLMEDIACODEC_MAX_TIMEOUT_TIMES 100
@@ -60,30 +60,6 @@ typedef struct
   bool inited;
   AMediaFormat *mediaformat;
   AMediaCodec *mediacodec;
-  AVPacket packet;
-  uint8_t *buffer;
-  uint32_t buffer_size;
-
-  bool in_eof;
-  bool ou_eof;
-  int64_t in_pts;
-  int64_t in_duration;
-
-  int in_timeout;
-  int ou_timeout;
-  int eof_timeout;
-  int in_timeout_times;
-  int ou_timeout_times;
-} HLMediaCodecDecContext;
-
-typedef struct
-{
-  AVClass *avclass;
-
-  HLMediaCodecStats stats;
-  bool inited;
-  AMediaFormat *mediaformat;
-  AMediaCodec *mediacodec;
   AVFrame *frame;
 
   bool in_eof;
@@ -100,10 +76,7 @@ typedef struct
 } HLMediaCodecEncContext;
 
 int hlmediacodec_fill_format(AVCodecContext *avctx, AMediaFormat *mediaformat);
-int hlmediacodec_fill_context(AMediaFormat *mediaformat, AVCodecContext *avctx);
-int hlmediacodec_decode_buffer_to_frame(AVCodecContext *avctx, AMediaCodecBufferInfo bufferinfo, AVFrame *frame);
 int hlmediacodec_encode_header(AVCodecContext *avctx);
-int hlmediacodec_get_buffer_size(AVCodecContext *avctx);
 void hlmediacodec_show_stats(AVCodecContext *avctx, HLMediaCodecStats stats);
 
 #endif

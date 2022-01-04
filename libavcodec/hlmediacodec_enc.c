@@ -81,23 +81,24 @@ static av_cold int hlmediacodec_encode_init(AVCodecContext *avctx)
     ctx->inited = true;
   } while (0);
 
-  hi_logi(avctx, "%s %d init ret (%d)", __FUNCTION__, __LINE__, ret);
+  hi_logd(avctx, "%s %d init ret (%d)", __FUNCTION__, __LINE__, ret);
   return ret;
 }
 
 static int hlmediacodec_enc_send(AVCodecContext *avctx, AVFrame *frame)
 {
 
-  hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
+  hi_logd(avctx, "%s %d ", __FUNCTION__, __LINE__);
 
   HLMediaCodecEncContext *ctx = avctx->priv_data;
+
   int ret = 0;
   do
   {
     if (frame == NULL)
     {
       ctx->in_eof = true; // flush
-      hi_logd(avctx, "%s %d ff_encode_get_frame eof", __FUNCTION__, __LINE__);
+      hi_logd(avctx, "%s %d hlmediacodec_enc_send in_eof", __FUNCTION__, __LINE__);
     }
 
     ctx->stats.get_succ_cnt++;
@@ -107,7 +108,7 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx, AVFrame *frame)
     {
       ssize_t in_bufidx = AMediaCodec_dequeueInputBuffer(ctx->mediacodec, ctx->in_timeout);
 
-      hi_logi(avctx, "%s %d AMediaCodec_dequeueInputBuffer in_bufidx: %d", __FUNCTION__, __LINE__, in_bufidx);
+      hi_logd(avctx, "%s %d AMediaCodec_dequeueInputBuffer in_bufidx: %d", __FUNCTION__, __LINE__, in_bufidx);
 
       if (in_bufidx < 0)
       {
@@ -122,7 +123,6 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx, AVFrame *frame)
           ret = AVERROR_EXTERNAL;
           break;
         }
-
         continue;
       }
 
@@ -140,6 +140,7 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx, AVFrame *frame)
       if (!ctx->in_eof)
       {
         size_t copy_size = in_buffersize;
+
         int copy_ret = av_image_copy_to_buffer(in_buffer, in_buffersize, (const uint8_t **)frame->data,
                                                frame->linesize, frame->format,
                                                frame->width, frame->height, 1);
@@ -152,14 +153,17 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx, AVFrame *frame)
         int64_t pts = av_rescale_q(frame->pts, avctx->time_base, AV_TIME_BASE_Q);
         int64_t duration = av_rescale_q(frame->pkt_duration, avctx->time_base, AV_TIME_BASE_Q);
         in_bufidx = AMediaCodec_queueInputBuffer(ctx->mediacodec, in_bufidx, 0, copy_size, pts, 0);
+
         ctx->in_pts = pts;
         ctx->in_duration = duration;
+
+        hi_logd(avctx, "%s %d AMediaCodec_queueInputBuffer success format: %d", __FUNCTION__, __LINE__, frame->format);
       }
       else
       {
         in_bufidx = AMediaCodec_queueInputBuffer(ctx->mediacodec, in_bufidx, 0, 0, 0, HLMEDIACODEC_BUFFER_FLAG_END_OF_STREAM);
         ctx->in_pts += ctx->in_duration;
-        hi_logi(avctx, "%s %d AMediaCodec_queueInputBuffer eof flush", __FUNCTION__, __LINE__);
+        hi_logd(avctx, "%s %d AMediaCodec_queueInputBuffer eof flush", __FUNCTION__, __LINE__);
       }
 
       if (in_bufidx != 0)
@@ -181,7 +185,7 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx, AVFrame *frame)
 
 static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
 {
-  hi_logi(avctx, "%s %d start hlmediacodec_enc_recv", __FUNCTION__, __LINE__);
+  hi_logd(avctx, "%s %d start hlmediacodec_enc_recv", __FUNCTION__, __LINE__);
 
   HLMediaCodecEncContext *ctx = avctx->priv_data;
 
@@ -296,14 +300,14 @@ static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
     }
   }
 
-  hi_logi(avctx, "%s %d ret (%d)", __FUNCTION__, __LINE__, ret);
+  hi_logd(avctx, "%s %d ret (%d)", __FUNCTION__, __LINE__, ret);
 
   return ret;
 }
 
 static av_cold int hlmediacodec_encode_close(AVCodecContext *avctx)
 {
-  hi_logi(avctx, "%s %d", __FUNCTION__, __LINE__);
+  hi_logd(avctx, "%s %d", __FUNCTION__, __LINE__);
 
   HLMediaCodecEncContext *ctx = avctx->priv_data;
   ctx->stats.uint_stamp = av_gettime_relative();
@@ -329,20 +333,20 @@ static av_cold int hlmediacodec_encode_close(AVCodecContext *avctx)
 static int hlmediacodec_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
                                      const AVFrame *frame, int *got_packet)
 {
-  hi_logi(avctx, "%s %d ", __FUNCTION__, __LINE__);
+  hi_logd(avctx, "%s %d ", __FUNCTION__, __LINE__);
 
   HLMediaCodecEncContext *ctx = avctx->priv_data;
+
   if (!ctx->inited)
   {
-    hi_logi(avctx, "%s %d not inited", __FUNCTION__, __LINE__);
+    hi_loge(avctx, "%s %d not inited", __FUNCTION__, __LINE__);
     return AVERROR_EXTERNAL;
   }
 
   if (ctx->in_eof && ctx->ou_eof)
   {
-    hi_logi(avctx, "%s %d eof", __FUNCTION__, __LINE__);
+    hi_logd(avctx, "%s %d eof", __FUNCTION__, __LINE__);
     return 0;
-    // return AVERROR_EOF;
   }
 
   int ret = 0;
@@ -360,7 +364,7 @@ static int hlmediacodec_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     *got_packet = 1;
   }
 
-  hi_logi(avctx, "%s %d ret: %d", __FUNCTION__, __LINE__, ret);
+  hi_logd(avctx, "%s %d ret: %d", __FUNCTION__, __LINE__, ret);
   return ret;
 }
 
