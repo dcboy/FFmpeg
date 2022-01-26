@@ -381,6 +381,7 @@ static const AVOption ff_hlmediacodec_enc_options[] = {
     {"eof_timeout", "eof buff timeout", OFFSET(eof_timeout), AV_OPT_TYPE_INT, {.i64 = HLMEDIACODEC_EOF_SET_TIMEOUT_USEC}, HLMEDIACODEC_MIN_TIMEOUT_USEC, HLMEDIACODEC_MAX_TIMEOUT_USEC, VE},
     {"in_timeout_times", "in buff timeout times", OFFSET(in_timeout_times), AV_OPT_TYPE_INT, {.i64 = HLMEDIACODEC_IN_SET_TIMEOUT_TIMES}, HLMEDIACODEC_MIN_TIMEOUT_TIMES, HLMEDIACODEC_MAX_TIMEOUT_TIMES, VE},
     {"ou_timeout_times", "ou buff timeout times", OFFSET(ou_timeout_times), AV_OPT_TYPE_INT, {.i64 = HLMEDIACODEC_ENC_OU_SET_TIMEOUT_TIMES}, HLMEDIACODEC_MIN_TIMEOUT_TIMES, HLMEDIACODEC_MAX_TIMEOUT_TIMES, VE},
+    {"color_format", "encoder color format", OFFSET(color_format), AV_OPT_TYPE_INT, {.i64 = HLMEDIACODEC_ENC_COLOR_FORMAT}, INT_MIN, INT_MAX, VE},
     {NULL},
 };
 

@@ -25,7 +25,9 @@ static int hlmediacodec_encode_fill_format(AVCodecContext *avctx, AMediaFormat *
       break;
     }
 
-    int color_format = ff_hlmediacodec_get_color_format(avctx->pix_fmt);
+    // int color_format = ff_hlmediacodec_get_color_format(avctx->pix_fmt);
+    int color_format = ctx->color_format;
+    hi_logi(avctx, "%s %d color_format: %d", __FUNCTION__, __LINE__, color_format);
     // int color_format = 21;
 
     AMediaFormat_setString(mediaformat, AMEDIAFORMAT_KEY_MIME, mime);
@@ -135,7 +137,7 @@ int hlmediacodec_encode_header(AVCodecContext *avctx)
       break;
     }
 
-    int ou_times = 5;
+    int ou_times = ctx->ou_timeout_times;
     bool got_config = false;
 
     while (!got_config)
