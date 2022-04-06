@@ -33,10 +33,10 @@ static int hlmediacodec_encode_fill_format(AVCodecContext *avctx, AMediaFormat *
     AMediaFormat_setString(mediaformat, AMEDIAFORMAT_KEY_MIME, mime);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_HEIGHT, avctx->height);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_WIDTH, avctx->width);
-    AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_BIT_RATE, avctx->bit_rate);
-    // AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_BIT_RATE, 1500000);
-    AMediaFormat_setFloat(mediaformat, AMEDIAFORMAT_KEY_FRAME_RATE, av_q2d(avctx->framerate));
-    // AMediaFormat_setFloat(mediaformat, AMEDIAFORMAT_KEY_FRAME_RATE, 25);
+    // AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_BIT_RATE, avctx->bit_rate);
+    AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_BIT_RATE, 1500000);
+    // AMediaFormat_setFloat(mediaformat, AMEDIAFORMAT_KEY_FRAME_RATE, av_q2d(avctx->framerate));
+    AMediaFormat_setFloat(mediaformat, AMEDIAFORMAT_KEY_FRAME_RATE, 20);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 1);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_COLOR_FORMAT, color_format);
 
