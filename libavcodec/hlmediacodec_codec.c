@@ -34,19 +34,23 @@ static int hlmediacodec_encode_fill_format(AVCodecContext *avctx, AMediaFormat *
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_HEIGHT, avctx->height);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_WIDTH, avctx->width);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_BIT_RATE, avctx->bit_rate);
+    // AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_BIT_RATE, 1500000);
     AMediaFormat_setFloat(mediaformat, AMEDIAFORMAT_KEY_FRAME_RATE, av_q2d(avctx->framerate));
+    // AMediaFormat_setFloat(mediaformat, AMEDIAFORMAT_KEY_FRAME_RATE, 25);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 1);
     AMediaFormat_setInt32(mediaformat, AMEDIAFORMAT_KEY_COLOR_FORMAT, color_format);
-    AMediaFormat_setInt32(mediaformat, "bitrate-mode", ctx->rc_mode); //质量优先
 
-    AMediaFormat_setInt32(mediaformat, "profile", 0x08); // High
-    AMediaFormat_setInt32(mediaformat, "level", 0x200);  // Level31
+    AMediaFormat_setInt32(mediaformat, "bitrate-mode", ctx->rc_mode); //质量优先
+    AMediaFormat_setInt32(mediaformat, "complexity", ctx->rc_mode);   //质量优先
+
+    // AMediaFormat_setInt32(mediaformat, "profile", 0x08); // High
+    // AMediaFormat_setInt32(mediaformat, "level", 0x200);  // Level31
 
     hi_logi(avctx, "%s %d mime: %s timeout: (in: %d ou: %d) times: (in: %d ou: %d) "
-                   "width: %d height: %d pix_fmt: %d color_format: %d bit_rate: %d",
+                   "width: %d height: %d pix_fmt: %d color_format: %d bit_rate: %d framerate: %d",
             __FUNCTION__, __LINE__, mime,
             ctx->in_timeout, ctx->ou_timeout, ctx->in_timeout_times, ctx->ou_timeout_times,
-            avctx->width, avctx->height, avctx->pix_fmt, color_format, avctx->bit_rate);
+            avctx->width, avctx->height, avctx->pix_fmt, color_format, avctx->bit_rate, avctx->framerate);
 
     ret = 0;
   } while (false);

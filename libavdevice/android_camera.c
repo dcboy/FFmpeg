@@ -523,9 +523,9 @@ error:
     }
     else
     {
-      av_log(avctx, AV_LOG_WARNING,
-             "Input queue was full, dropping frame, consider raising the input_queue_size option (current value: %d)\n",
-             ctx->input_queue_size);
+      // av_log(avctx, AV_LOG_WARNING,
+      //        "Input queue was full, dropping frame, consider raising the input_queue_size option (current value: %d)\n",
+      //        ctx->input_queue_size);
     }
     if (pkt_buffer_size)
     {
@@ -709,7 +709,7 @@ static int add_display_matrix(AVFormatContext *avctx, AVStream *st)
   uint8_t *side_data;
   int32_t display_matrix[9];
 
-  av_display_rotation_set(display_matrix, 0);
+  av_display_rotation_set(display_matrix, 180);
 
   // av_display_rotation_set(display_matrix, ctx->sensor_orientation);
 
