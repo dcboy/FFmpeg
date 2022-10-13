@@ -1109,6 +1109,10 @@ OBJS-$(CONFIG_LIBXAVS2_ENCODER)           += libxavs2.o
 OBJS-$(CONFIG_LIBXVID_ENCODER)            += libxvid.o
 OBJS-$(CONFIG_LIBZVBI_TELETEXT_DECODER)   += libzvbi-teletextdec.o ass.o
 
+OBJS-$(CONFIG_HLMEDIACODEC)            		+= hlmediacodec.o hlmediacodec_codec.o
+OBJS-$(CONFIG_H264_HLMEDIACODEC_ENCODER) 	+= hlmediacodec_enc.o
+SKIPHEADERS-$(CONFIG_HLMEDIACODEC)     		+= hlmediacodec.h hlmediacodec_codec.h
+
 # parsers
 OBJS-$(CONFIG_AAC_LATM_PARSER)         += latm_parser.o
 OBJS-$(CONFIG_AAC_PARSER)              += aac_parser.o aac_ac3_parser.o
