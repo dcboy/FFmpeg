@@ -25,6 +25,7 @@
 *.ptx
 *.ptx.c
 *.ptx.gz
+*.tmp
 *_g
 \#*
 .\#*
