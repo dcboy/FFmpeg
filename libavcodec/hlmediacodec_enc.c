@@ -235,18 +235,16 @@ static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
 
     FFAMediaCodecBufferInfo bufferInfo = {0};
 
-    ssize_t ou_bufidx = AMediaCodec_dequeueOutputBuffer(
-        ctx->mediacodec, &bufferInfo, ctx->ou_timeout);
+    ssize_t ou_bufidx = AMediaCodec_dequeueOutputBuffer(ctx->mediacodec, &bufferInfo, ctx->ou_timeout);
     hi_logt(avctx, "%s %d AMediaCodec_dequeueOutputBuffer ret (%d) times: %d offset: %d size: %d pts: %llu flags: %u",
-            __FUNCTION__, __LINE__, ou_bufidx, ctx->ou_timeout_times - ou_times, bufferInfo.offset, bufferInfo.size,
-            bufferInfo.presentationTimeUs, bufferInfo.flags);
+            __FUNCTION__, __LINE__, ou_bufidx, ctx->ou_timeout_times - ou_times, bufferInfo.offset,
+            bufferInfo.size, bufferInfo.presentationTimeUs, bufferInfo.flags);
     if (ou_bufidx >= 0)
     {
       ctx->stats.ou_succ_cnt++;
 
       size_t ou_bufsize = 0;
-      uint8_t *ou_buf =
-          AMediaCodec_getOutputBuffer(ctx->mediacodec, ou_bufidx, &ou_bufsize);
+      uint8_t *ou_buf = AMediaCodec_getOutputBuffer(ctx->mediacodec, ou_bufidx, &ou_bufsize);
       if (!ou_buf)
       {
         hi_loge(avctx, "%s %d AMediaCodec_getOutputBuffer codec: %p fail",
@@ -280,8 +278,8 @@ static int hlmediacodec_enc_recv(AVCodecContext *avctx, AVPacket *pkt)
       if (bufferInfo.flags & HLMEDIACODEC_BUFFER_FLAG_CODEC_CONFIG)
       {
         ctx->stats.ou_succ_conf_cnt++;
-        // 这里不包括关键帧
-        // pkt->flags |= AV_PKT_FLAG_KEY;
+        pkt->flags |= AV_PKT_FLAG_KEY;
+        ret = AVERROR(EAGAIN);
       }
 
       if (bufferInfo.flags & HLMEDIACODEC_CONFIGURE_FLAG_ENCODE)
