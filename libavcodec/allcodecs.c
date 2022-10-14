@@ -155,6 +155,7 @@ extern const FFCodec ff_h264_mediacodec_decoder;
 extern const FFCodec ff_h264_mmal_decoder;
 extern const FFCodec ff_h264_qsv_decoder;
 extern const FFCodec ff_h264_rkmpp_decoder;
+extern const FFCodec ff_h264_hlmediacodec_encoder;
 extern const FFCodec ff_hap_encoder;
 extern const FFCodec ff_hap_decoder;
 extern const FFCodec ff_hevc_decoder;
@@ -862,9 +863,6 @@ extern const FFCodec ff_vp9_mediacodec_decoder;
 extern const FFCodec ff_vp9_qsv_decoder;
 extern const FFCodec ff_vp9_vaapi_encoder;
 extern const FFCodec ff_vp9_qsv_encoder;
-// add by dcboy
-extern const AVCodec ff_h264_hlmediacodec_encoder;
-extern const AVCodec ff_h264_hlmediacodec_decoder;
 
 // The iterate API is not usable with ossfuzz due to the excessive size of binaries created
 #if CONFIG_OSSFUZZ
