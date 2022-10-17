@@ -132,21 +132,16 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
     int in_times = ctx->in_timeout_times;
     while (true)
     {
-      ssize_t in_bufidx =
-          AMediaCodec_dequeueInputBuffer(ctx->mediacodec, ctx->in_timeout);
+      ssize_t in_bufidx = AMediaCodec_dequeueInputBuffer(ctx->mediacodec, ctx->in_timeout);
       if (in_bufidx < 0)
       {
-        hi_logd(avctx,
-                "%s %d AMediaCodec_dequeueInputBuffer codec: %p fail (%d) "
-                "getret: %d times: %d",
-                __FUNCTION__, __LINE__, ctx->mediacodec, in_bufidx, get_ret,
-                in_times);
+        hi_logd(avctx, "%s %d AMediaCodec_dequeueInputBuffer codec: %p fail (%d) getret: %d times: %d",
+                __FUNCTION__, __LINE__, ctx->mediacodec, in_bufidx, get_ret, in_times);
         ctx->stats.in_fail_cnt++;
 
         if (in_times-- <= 0)
         {
-          hi_logd(avctx, "%s %d AMediaCodec_dequeueInputBuffer timeout",
-                  __FUNCTION__, __LINE__);
+          hi_logd(avctx, "%s %d AMediaCodec_dequeueInputBuffer timeout", __FUNCTION__, __LINE__);
           ret = AVERROR_EXTERNAL;
           break;
         }
@@ -155,12 +150,10 @@ static int hlmediacodec_enc_send(AVCodecContext *avctx)
       }
 
       size_t in_buffersize = 0;
-      uint8_t *in_buffer = AMediaCodec_getInputBuffer(
-          ctx->mediacodec, in_bufidx, &in_buffersize);
+      uint8_t *in_buffer = AMediaCodec_getInputBuffer(ctx->mediacodec, in_bufidx, &in_buffersize);
       if (!in_buffer)
       {
-        hi_loge(avctx, "%s %d AMediaCodec_getInputBuffer codec: %p fail",
-                __FUNCTION__, __LINE__, ctx->mediacodec);
+        hi_loge(avctx, "%s %d AMediaCodec_getInputBuffer codec: %p fail", __FUNCTION__, __LINE__, ctx->mediacodec);
         ctx->stats.in_fail_cnt++;
         ret = AVERROR_EXTERNAL;
         break;
